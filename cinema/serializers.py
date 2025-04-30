@@ -3,27 +3,6 @@ from rest_framework import serializers
 from cinema.models import Movie, Genre, Actor, CinemaHall
 
 
-class MovieSerializer(serializers.Serializer):
-    id = serializers.IntegerField(read_only=True)
-    title = serializers.CharField(max_length=255)
-    description = serializers.CharField()
-    duration = serializers.IntegerField()
-
-    def create(self, validated_data):
-        return Movie.objects.create(**validated_data)
-
-    def update(self, instance, validated_data):
-        instance.title = validated_data.get("title", instance.title)
-        instance.description = validated_data.get(
-            "description", instance.description
-        )
-        instance.duration = validated_data.get(
-            "duration", instance.duration
-        )
-        instance.save()
-        return instance
-
-
 class GenreSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=100)
 
@@ -67,6 +46,29 @@ class CinemaHallSerializer(serializers.Serializer):
         instance.rows = validated_data.get("rows", instance.rows)
         instance.seats_in_row = validated_data.get(
             "seats_in_row", instance.seats_in_row
+        )
+        instance.save()
+        return instance
+
+
+class MovieSerializer(serializers.Serializer):
+    id = serializers.IntegerField(read_only=True)
+    title = serializers.CharField(max_length=255)
+    description = serializers.CharField()
+    duration = serializers.IntegerField()
+    genres = GenreSerializer(many=True, required=False)
+    actors = ActorSerializer(many=True, required=False)
+
+    def create(self, validated_data):
+        return Movie.objects.create(**validated_data)
+
+    def update(self, instance, validated_data):
+        instance.title = validated_data.get("title", instance.title)
+        instance.description = validated_data.get(
+            "description", instance.description
+        )
+        instance.duration = validated_data.get(
+            "duration", instance.duration
         )
         instance.save()
         return instance
