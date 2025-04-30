@@ -1,3 +1,4 @@
+from django.db import transaction
 from rest_framework import serializers
 
 from cinema.models import Movie, Genre, Actor, CinemaHall
@@ -60,7 +61,15 @@ class MovieSerializer(serializers.Serializer):
     actors = ActorSerializer(many=True, required=False)
 
     def create(self, validated_data):
-        return Movie.objects.create(**validated_data)
+        with transaction.atomic():
+            genres_data = validated_data.pop("genres", [])
+            actors_data = validated_data.pop("actors", [])
+            movie = Movie.objects.create(**validated_data)
+            for genre_data in genres_data:
+                Genre.objects.create(**genre_data)
+            for actor_data in actors_data:
+                Actor.objects.create(**actor_data)
+            return movie
 
     def update(self, instance, validated_data):
         instance.title = validated_data.get("title", instance.title)
